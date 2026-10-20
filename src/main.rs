@@ -124,7 +124,41 @@ Options take the form /name=value (WizTree style) or --name=value:
   /import=FILE.csv           Open a previously exported CSV in the GUI
 ";
 
+/// Append panics to `crash.log` next to the settings file, keeping the usual
+/// message on stderr too. A GUI run started from a menu has no terminal, so
+/// without this a crash leaves nothing to read.
+fn install_crash_log() {
+    std::panic::set_hook(Box::new(|info| {
+        use std::io::Write;
+        let file = config::settings_path().with_file_name("crash.log");
+        let at = info
+            .location()
+            .map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()))
+            .unwrap_or_else(|| "unknown".into());
+        let text = format!(
+            "--- {} v{} ---\n{info}\nat {at}\n{}\n",
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+            env!("CARGO_PKG_VERSION"),
+            std::backtrace::Backtrace::force_capture(),
+        );
+        if let Some(d) = file.parent() {
+            let _ = std::fs::create_dir_all(d);
+        }
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&file) {
+            let _ = f.write_all(text.as_bytes());
+        }
+        let _ = std::io::stderr().write_all(text.as_bytes());
+    }));
+}
+
 fn main() {
+    install_crash_log();
+    // Rust ignores SIGPIPE, so a closed pipe turns into a panic ("failed
+    // printing to stderr") and aborts. Standard tools just die quietly.
+    #[cfg(unix)]
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
     // Privileged helper modes (run through sudo / pkexec by the app itself).
     let raw: Vec<String> = std::env::args().skip(1).collect();
     if raw.first().map(String::as_str) == Some("--mft-dump") {

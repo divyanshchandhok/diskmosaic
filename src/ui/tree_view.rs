@@ -168,6 +168,31 @@ pub fn is_expandable(t: &Tree, row: &Row) -> bool {
 
 // ------------------------------------------------------------------ layout
 
+/// Height of the treemap pane. Hidden in very short windows: the fixed
+/// minimums would otherwise make `clamp` panic (min > max).
+fn treemap_height(full_h: f32, frac: f32) -> f32 {
+    const MIN_TM: f32 = 120.0;
+    const MIN_TOP: f32 = 140.0;
+    if !(full_h >= MIN_TM + MIN_TOP) || !frac.is_finite() {
+        return 0.0;
+    }
+    let h = full_h * frac;
+    if !h.is_finite() {
+        return 0.0;
+    }
+    h.clamp(MIN_TM, full_h - MIN_TOP)
+}
+
+/// Width of the file-type panel, or 0 when the window is too narrow for it.
+fn ext_panel_width(full_w: f32, want: f32) -> f32 {
+    const MIN_EXT: f32 = 260.0;
+    let max = full_w * 0.6;
+    if max < MIN_EXT || !max.is_finite() || !want.is_finite() {
+        return 0.0;
+    }
+    want.clamp(MIN_EXT, max)
+}
+
 pub fn show(app: &mut App, ui: &mut Ui) {
     if app.rows_dirty {
         app.rows = build_rows(app);
@@ -175,8 +200,8 @@ pub fn show(app: &mut App, ui: &mut Ui) {
     }
     let full = ui.max_rect();
     let gap = 10.0;
-    let show_tm = app.s.show_treemap;
-    let tm_h = if show_tm { (full.height() * app.s.treemap_height_frac).clamp(120.0, full.height() - 140.0) } else { 0.0 };
+    let tm_h = if app.s.show_treemap { treemap_height(full.height(), app.s.treemap_height_frac) } else { 0.0 };
+    let show_tm = tm_h > 0.0;
     let top = Rect::from_min_max(full.min, Pos2::new(full.max.x, full.max.y - if show_tm { tm_h + gap } else { 0.0 }));
     // Horizontal splitter between top area and treemap.
     if show_tm {
@@ -194,7 +219,7 @@ pub fn show(app: &mut App, ui: &mut Ui) {
             app.s.treemap_height_frac = ny.clamp(0.15, 0.85);
         }
     }
-    let ext_w = if app.s.show_file_types { app.s.ext_panel_width.clamp(260.0, top.width() * 0.6) } else { 0.0 };
+    let ext_w = if app.s.show_file_types { ext_panel_width(top.width(), app.s.ext_panel_width) } else { 0.0 };
     let tree_r = Rect::from_min_max(top.min, Pos2::new(top.max.x - if ext_w > 0.0 { ext_w + gap } else { 0.0 }, top.max.y));
     if ext_w > 0.0 {
         let split = Rect::from_min_max(Pos2::new(tree_r.right(), top.top()), Pos2::new(tree_r.right() + gap, top.bottom()));
@@ -762,5 +787,27 @@ mod tests {
         assert_eq!(f.nodes.len(), 3);
         let f = filter_tree(&t, "", "b", false);
         assert_eq!(f.total_size(), 110);
+    }
+
+    /// Regression: a short window used to call `f32::clamp(120, h - 140)`
+    /// with min > max, aborting the whole app during a scan.
+    #[test]
+    fn layout_never_panics_on_small_windows() {
+        for h in [0.0, 1.0, 185.0, 186.0, 259.0, 260.0, 300.0, 800.0] {
+            for frac in [0.0, 0.15, 0.42, 1.0] {
+                let tm = treemap_height(h, frac);
+                assert!((0.0..=h).contains(&tm), "h={h} frac={frac} tm={tm}");
+            }
+        }
+        assert_eq!(treemap_height(186.0, 0.42), 0.0);
+        assert!(treemap_height(800.0, 0.42) >= 120.0);
+        for w in [0.0, 100.0, 432.0, 433.0, 480.0, 1280.0] {
+            for want in [0.0, 260.0, 440.0, 900.0] {
+                let e = ext_panel_width(w, want);
+                assert!((0.0..=w).contains(&e), "w={w} want={want} e={e}");
+            }
+        }
+        assert_eq!(ext_panel_width(400.0, 440.0), 0.0);
+        assert!(ext_panel_width(1280.0, 440.0) >= 260.0);
     }
 }

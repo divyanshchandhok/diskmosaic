@@ -195,3 +195,28 @@ fn bench_views() {
     let _ = &d;
     println!("dups name+size in {:?}", t.elapsed());
 }
+
+/// Regression: a short window used to call `f32::clamp(120, h - 140)` with
+/// min > max in the tree view, aborting the app during a scan.
+#[test]
+#[ignore]
+fn tiny_window() {
+    let path = std::env::var("WT_SNAP_PATH").unwrap_or_else(|_| "/usr".into());
+    for size in [[420.0, 170.0], [760.0, 300.0]] {
+        let mut h = Harness::builder()
+            .with_size(size)
+            .with_pixels_per_point(1.0)
+            .with_max_steps(100_000)
+            .with_accessibility_check(false)
+            .allow_missing_glyphs()
+            .wgpu()
+            .build_eframe(|cc| App::new(cc, vec![PathBuf::from(&path)]));
+        let t0 = Instant::now();
+        while h.state().scan.is_some() || h.state().tree.is_none() {
+            h.step();
+            std::thread::sleep(Duration::from_millis(20));
+            assert!(t0.elapsed() < Duration::from_secs(120), "scan timed out");
+        }
+        h.run_steps(4);
+    }
+}
