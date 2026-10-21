@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn refresh_picks_up_changes() {
-        let dir = std::env::temp_dir().join(format!("wiztree_mon_{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("diskmosaic_mon_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("a")).unwrap();
         std::fs::write(dir.join("a/one.bin"), vec![0u8; 100]).unwrap();

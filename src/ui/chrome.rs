@@ -841,7 +841,7 @@ pub fn about(app: &mut App, ui: &mut Ui) {
             card(ui, &pal, |ui| {
                 egui::Frame::new().inner_margin(Margin::same(28)).show(ui, |ui| {
                     ui.set_width(ui.available_width());
-                    ui.label(RichText::new("WizTree").font(theme::semibold(28.0)));
+                    ui.label(RichText::new(crate::csvio::APP_NAME).font(theme::semibold(28.0)));
                     ui.label(RichText::new(format!("Cross-platform disk space analyzer · version {}", env!("CARGO_PKG_VERSION"))).color(pal.text2));
                     ui.add_space(14.0);
                     ui.label(

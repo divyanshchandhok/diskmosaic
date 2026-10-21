@@ -58,7 +58,7 @@ impl Dialogs {
         } else {
             PathBuf::from(&s.export_dir)
         };
-        let name = format!("WizTree_{}.csv", chrono::Local::now().format("%Y%m%d%H%M%S"));
+        let name = format!("DiskMosaic_{}.csv", chrono::Local::now().format("%Y%m%d%H%M%S"));
         self.export = Some(ExportState { from_files, selected_only: false, path: dir.join(name).display().to_string() });
     }
 
@@ -699,7 +699,7 @@ fn treemap_export(app: &mut App, ctx: &egui::Context) {
     }
     if go {
         keep = false;
-        let name = format!("WizTree_{}.png", chrono::Local::now().format("%Y%m%d%H%M%S"));
+        let name = format!("DiskMosaic_{}.png", chrono::Local::now().format("%Y%m%d%H%M%S"));
         if let Some(p) = rfd::FileDialog::new().add_filter("PNG image", &["png"]).set_file_name(name).save_file() {
             let (w, h) = (app.s.treemap_export_w, app.s.treemap_export_h);
             match super::treemap_view::render_image(app, w, h, app.s.treemap_export_gray, app.s.treemap_export_free) {

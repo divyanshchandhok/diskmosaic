@@ -42,7 +42,7 @@ pub fn locale_dir() -> PathBuf {
     if let Some(d) = &exe_dir {
         cands.push(d.join("locale"));
     }
-    if let Some(p) = directories::ProjectDirs::from("", "", "wiztree") {
+    if let Some(p) = directories::ProjectDirs::from("", "", "diskmosaic") {
         cands.push(p.config_dir().join("locale"));
     }
     cands.iter().find(|p| p.is_dir()).cloned().or_else(|| cands.into_iter().next()).unwrap_or_else(|| PathBuf::from("locale"))

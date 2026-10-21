@@ -48,7 +48,7 @@ pub struct ScanOptions {
 }
 
 /// Privilege escalation used to read the raw MFT through the helper mode
-/// (`wiztree --mft-dump DEV`), which streams only the MFT bytes back.
+/// (`diskmosaic --mft-dump DEV`), which streams only the MFT bytes back.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub enum Elevation {
@@ -598,7 +598,7 @@ mod tests {
 
     #[test]
     fn scans_temp_dir() {
-        let dir = std::env::temp_dir().join(format!("wiztree_scan_test_{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("diskmosaic_scan_test_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("sub/deeper")).unwrap();
         std::fs::write(dir.join("a.txt"), vec![0u8; 1000]).unwrap();

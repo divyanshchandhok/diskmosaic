@@ -666,7 +666,7 @@ impl App {
                         .set_title("Export File Types to CSV file")
                         .add_filter("CSV file", &["csv"])
                         .add_filter("Tab Separated Values (.tsv)", &["tsv"])
-                        .set_file_name(format!("WizTree_FileTypes_{}.csv", chrono::Local::now().format("%Y%m%d%H%M%S")))
+                        .set_file_name(format!("DiskMosaic_FileTypes_{}.csv", chrono::Local::now().format("%Y%m%d%H%M%S")))
                         .save_file()
                     {
                         let tsv = p.extension().map(|e| e == "tsv").unwrap_or(false);

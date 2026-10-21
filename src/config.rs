@@ -1,4 +1,4 @@
-//! Persistent settings (JSON). Portable mode: if `wiztree.json` exists next
+//! Persistent settings (JSON). Portable mode: if `diskmosaic.json` exists next
 //! to the executable it is used instead of the per-user config directory.
 
 use crate::format::SizeUnit;
@@ -252,7 +252,7 @@ pub const SETTINGS_VERSION: u32 = 2;
 
 pub fn portable_path() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
-    let p = exe.parent()?.join("wiztree.json");
+    let p = exe.parent()?.join("diskmosaic.json");
     p.exists().then_some(p)
 }
 
@@ -260,9 +260,9 @@ pub fn settings_path() -> PathBuf {
     if let Some(p) = portable_path() {
         return p;
     }
-    let dir = directories::ProjectDirs::from("com", "wiztree-rs", "WizTree")
+    let dir = directories::ProjectDirs::from("com", "diskmosaic", "DiskMosaic")
         .map(|d| d.config_dir().to_path_buf())
-        .unwrap_or_else(|| std::env::temp_dir().join("wiztree"));
+        .unwrap_or_else(|| std::env::temp_dir().join("diskmosaic"));
     dir.join("settings.json")
 }
 

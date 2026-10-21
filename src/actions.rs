@@ -279,7 +279,7 @@ pub fn restart_elevated(args: &[String]) -> Result<(), String> {
         }
         if let Ok(home) = std::env::var("HOME") {
             // Keep using the invoking user's settings.
-            cmd.arg(format!("WIZTREE_CONFIG_HOME={home}"));
+            cmd.arg(format!("DISKMOSAIC_CONFIG_HOME={home}"));
         }
         cmd.arg(&exe).args(args);
         cmd.spawn().map_err(|e| format!("Couldn't start the elevated relaunch: {e}"))?;

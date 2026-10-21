@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::io::{self, BufRead, BufWriter, Write};
 use std::path::Path;
 
-pub const APP_NAME: &str = "WizTree";
+pub const APP_NAME: &str = "DiskMosaic";
 pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Clone, Debug)]

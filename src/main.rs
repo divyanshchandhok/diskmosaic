@@ -22,7 +22,7 @@ mod volumes;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-/// Command line, in WizTree's syntax: `wiztree <path> /export="out.csv"
+/// Command line, in WizTree's syntax: `diskmosaic <path> /export="out.csv"
 /// /exportfolders=0 ...`. `--name=value`, `-name=value` and `--name value`
 /// are accepted too. Option names are case-insensitive.
 #[derive(Default)]
@@ -87,9 +87,9 @@ fn is_opt_name(b: &str) -> bool {
 }
 
 const HELP: &str = "\
-WizTree - fast disk space analyser
+DiskMosaic - fast disk space analyser
 
-Usage: wiztree [PATH...] [OPTIONS]
+Usage: diskmosaic [PATH...] [OPTIONS]
 
 Without export options the GUI starts and scans PATH (or shows the picker).
 Options take the form /name=value (WizTree style) or --name=value:
@@ -201,7 +201,7 @@ fn run_gui(start: Vec<PathBuf>) {
     }
     let mut vp = egui::ViewportBuilder::default()
         .with_title(csvio::APP_NAME)
-        .with_app_id("wiztree")
+        .with_app_id("diskmosaic")
         .with_inner_size([settings.window_w.max(960.0), settings.window_h.max(600.0)])
         .with_min_inner_size([760.0, 480.0])
         .with_icon(Arc::new(app_icon(128)))
@@ -286,12 +286,12 @@ fn helper_mft_dump(dev: &str) -> i32 {
     }
 }
 
-pub const NTFS_RULE_PATH: &str = "/etc/udev/rules.d/70-wiztree-ntfs.rules";
+pub const NTFS_RULE_PATH: &str = "/etc/udev/rules.d/70-diskmosaic-ntfs.rules";
 
 /// `--install-ntfs-access`: let the logged-in desktop user read NTFS block
 /// devices (systemd `uaccess` ACL), so fast scans need no password later.
 fn helper_install_ntfs_access() -> i32 {
-    let rule = "# Installed by WizTree: lets the active local user read NTFS partitions\n\
+    let rule = "# Installed by DiskMosaic: lets the active local user read NTFS partitions\n\
                 # so the MFT can be scanned directly. Delete this file to revoke.\n\
                 SUBSYSTEM==\"block\", ENV{ID_FS_TYPE}==\"ntfs\", TAG+=\"uaccess\"\n";
     if let Err(e) = std::fs::write(NTFS_RULE_PATH, rule) {
