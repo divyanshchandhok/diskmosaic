@@ -12,7 +12,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 pub struct Monitor {
-    _watcher: notify::RecommendedWatcher,
+    /// Filled in by the setup thread once every root is watched.
+    _watcher: Arc<Mutex<Option<notify::RecommendedWatcher>>>,
     rx: crossbeam_channel::Receiver<PathBuf>,
     pending: HashSet<PathBuf>,
     last_event: Instant,
@@ -34,17 +35,26 @@ impl Monitor {
             }
         })
         .ok()?;
-        let mut any = false;
-        for r in roots {
-            if w.watch(r, RecursiveMode::Recursive).is_ok() {
-                any = true;
-            }
-        }
-        if !any {
-            return None;
-        }
+        // A recursive inotify watch walks every folder under the roots. On a
+        // whole drive just read through the MFT the directories are not in
+        // the kernel cache, so this takes seconds to minutes on a spinning
+        // disk; doing it on the UI thread froze the app at the end of a scan.
+        let slot = Arc::new(Mutex::new(None));
+        let (slot2, roots) = (slot.clone(), roots.to_vec());
+        std::thread::Builder::new()
+            .name("monitor-setup".into())
+            .spawn(move || {
+                let mut any = false;
+                for r in &roots {
+                    any |= w.watch(r, RecursiveMode::Recursive).is_ok();
+                }
+                if any {
+                    *slot2.lock() = Some(w);
+                }
+            })
+            .ok()?;
         Some(Monitor {
-            _watcher: w,
+            _watcher: slot,
             rx,
             pending: HashSet::new(),
             last_event: Instant::now(),
